@@ -192,7 +192,7 @@ class Blockcmsinfo extends Module
 		);
 
 		foreach ($content as $key => $value)
-			$content[$key]['text'] = substr(strip_tags($value['text']), 0, 200);
+			$content[$key]['text'] = $value['text'];
 
 		return $content;
 	}
