@@ -36,7 +36,7 @@ class Blockcmsinfo extends Module
 	{
 		$this->name = 'blockcmsinfo';
 		$this->tab = 'front_office_features';
-		$this->version = '1.1';
+		$this->version = '1.2';
 		$this->author = 'PrestaShop';
 		$this->bootstrap = true;
 		$this->need_instance = 0;
@@ -282,10 +282,8 @@ class Blockcmsinfo extends Module
 			),
 		);
 
-		$simple_header = true;
 		if (Shop::isFeatureActive())
 		{
-			$simple_header = false;
 			$this->fields_list['id_shop'] = array(
 				'title' => $this->l('ID Shop'),
 				'align' => 'center',
@@ -297,7 +295,7 @@ class Blockcmsinfo extends Module
 
 		$helper = new HelperList();
 		$helper->shopLinkType = '';
-		$helper->simple_header = $simple_header;
+		$helper->simple_header = false;
 		$helper->identifier = 'id_info';
 		$helper->actions = array('edit', 'delete');
 		$helper->show_toolbar = true;
