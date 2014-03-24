@@ -36,7 +36,7 @@ class Blockcmsinfo extends Module
 	{
 		$this->name = 'blockcmsinfo';
 		$this->tab = 'front_office_features';
-		$this->version = '1.2';
+		$this->version = '1.3';
 		$this->author = 'PrestaShop';
 		$this->bootstrap = true;
 		$this->need_instance = 0;
@@ -165,7 +165,11 @@ class Blockcmsinfo extends Module
 		{
 			$helper = $this->initList();
 
-			return $html.$helper->generateList($this->getListContent((int)Configuration::get('PS_LANG_DEFAULT')), $this->fields_list);
+			$content = $this->getListContent((int)Configuration::get('PS_LANG_DEFAULT'));
+			foreach ($content as $key => $value)
+				$content[$key]['text'] = substr(strip_tags($value['text']), 0, 200);
+
+			return $html.$helper->generateList($content, $this->fields_list);
 		}
 
 		if (isset($_POST['submitModule']))
@@ -189,11 +193,8 @@ class Blockcmsinfo extends Module
 			LEFT JOIN `'._DB_PREFIX_.'info_lang` rl ON (r.`id_info` = rl.`id_info`)
 			WHERE `id_lang` = '.(int)$id_lang.
 			(Tools::getIsset('blockcmsinfoOrderby') && Tools::getIsset('blockcmsinfoOrderway') ?
-				' ORDER BY '.Tools::getValue('blockcmsinfoOrderby').' '.Tools::getValue('blockcmsinfoOrderway') : '')
+				' ORDER BY '.bqSQL(Tools::getValue('blockcmsinfoOrderby')).' '.bqSQL(Tools::getValue('blockcmsinfoOrderway')) : '')
 		);
-
-		foreach ($content as $key => $value)
-			$content[$key]['text'] = substr(strip_tags($value['text']), 0, 200);
 
 		return $content;
 	}
