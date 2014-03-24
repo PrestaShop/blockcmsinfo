@@ -193,7 +193,7 @@ class Blockcmsinfo extends Module
 			LEFT JOIN `'._DB_PREFIX_.'info_lang` rl ON (r.`id_info` = rl.`id_info`)
 			WHERE `id_lang` = '.(int)$id_lang.
 			(Tools::getIsset('blockcmsinfoOrderby') && Tools::getIsset('blockcmsinfoOrderway') ?
-				' ORDER BY '.bqSQL(Tools::getValue('blockcmsinfoOrderby')).' '.bqSQL(Tools::getValue('blockcmsinfoOrderway')) : '')
+				' ORDER BY `'.bqSQL(Tools::getValue('blockcmsinfoOrderby')).'` '.bqSQL(Tools::getValue('blockcmsinfoOrderway')) : '')
 		);
 
 		return $content;
