@@ -191,7 +191,7 @@ class Blockcmsinfo extends Module
 			SELECT r.`id_info`, r.`id_shop`, rl.`text`
 			FROM `'._DB_PREFIX_.'info` r
 			LEFT JOIN `'._DB_PREFIX_.'info_lang` rl ON (r.`id_info` = rl.`id_info`)
-			WHERE `id_lang` = '.(int)$id_lang.
+			WHERE `id_lang` = '.(int)$id_lang.' '.Shop::addSqlRestrictionOnLang().
 			(Tools::getIsset('blockcmsinfoOrderby') && Tools::getIsset('blockcmsinfoOrderway') ?
 				' ORDER BY `'.bqSQL(Tools::getValue('blockcmsinfoOrderby')).'` '.bqSQL(Tools::getValue('blockcmsinfoOrderway')) : '')
 		);
