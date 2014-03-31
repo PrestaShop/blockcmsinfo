@@ -36,7 +36,7 @@ class Blockcmsinfo extends Module
 	{
 		$this->name = 'blockcmsinfo';
 		$this->tab = 'front_office_features';
-		$this->version = '1.3';
+		$this->version = '1.4';
 		$this->author = 'PrestaShop';
 		$this->bootstrap = true;
 		$this->need_instance = 0;
@@ -185,13 +185,13 @@ class Blockcmsinfo extends Module
 		}
 	}
 
-	protected function getListContent($id_lang)
+	protected function getListContent($id_lang, $id_shop = null)
 	{
 		$content = Db::getInstance()->executeS('
 			SELECT r.`id_info`, r.`id_shop`, rl.`text`
 			FROM `'._DB_PREFIX_.'info` r
 			LEFT JOIN `'._DB_PREFIX_.'info_lang` rl ON (r.`id_info` = rl.`id_info`)
-			WHERE `id_lang` = '.(int)$id_lang.
+			WHERE `id_lang` = '.(int)$id_lang.($id_shop ? ' AND id_shop='.bqSQL((int)$id_shop) : '').
 			(Tools::getIsset('blockcmsinfoOrderby') && Tools::getIsset('blockcmsinfoOrderway') ?
 				' ORDER BY `'.bqSQL(Tools::getValue('blockcmsinfoOrderby')).'` '.bqSQL(Tools::getValue('blockcmsinfoOrderway')) : '')
 		);
@@ -320,7 +320,7 @@ class Blockcmsinfo extends Module
 		$this->context->controller->addCSS($this->_path.'style.css', 'all');
 		if (!$this->isCached('blockcmsinfo.tpl', $this->getCacheId()))
 		{
-			$infos = $this->getListContent($this->context->language->id);
+			$infos = $this->getListContent($this->context->language->id, $this->context->shop->id);
 			$this->context->smarty->assign(array('infos' => $infos, 'nbblocks' => count($infos)));
 		}
 
