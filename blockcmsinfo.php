@@ -167,7 +167,7 @@ class Blockcmsinfo extends Module
 
 			$content = $this->getListContent((int)Configuration::get('PS_LANG_DEFAULT'));
 			foreach ($content as $key => $value)
-				$content[$key]['text'] = substr(strip_tags($value['text']), 0, 200);
+				$content[$key]['text'] = substr(strip_tags(Tools::htmlentitiesDecodeUTF8($value['text'])), 0, 200);
 
 			return $html.$helper->generateList($content, $this->fields_list);
 		}
