@@ -287,7 +287,7 @@ class Blockcmsinfo extends Module
 		if (Shop::isFeatureActive())
 		{
 			$this->fields_list['id_shop'] = array(
-				'title' => $this->l('ID Shop'),
+				'title' => $this->l('Shop ID'),
 				'align' => 'center',
 				'width' => 25,
 				'type' => 'int',
