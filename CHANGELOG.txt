@@ -1,3 +1,4 @@
+2014-04-22 18:57:01 +0200	// Changelog updated
 2014-04-07 10:12:29 +0200	[-] MO : blockcmsinfo - Encoding restitution issue #PSCSX-1554 fixed
 2014-03-31 17:59:54 +0200	[-] MO : blockcmsinfo : now only show current shop custom block
 2014-03-24 17:23:58 +0100	// backquotes
