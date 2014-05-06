@@ -36,7 +36,7 @@ class Blockcmsinfo extends Module
 	{
 		$this->name = 'blockcmsinfo';
 		$this->tab = 'front_office_features';
-		$this->version = '1.4';
+		$this->version = '1.5';
 		$this->author = 'PrestaShop';
 		$this->bootstrap = true;
 		$this->need_instance = 0;
@@ -119,20 +119,23 @@ class Blockcmsinfo extends Module
 
 		if (Tools::isSubmit('saveblockcmsinfo'))
 		{
-			if ($id_info = Tools::getValue('id_info'))
-				$info = new infoClass((int)$id_info);
-			else
-				$info = new infoClass();
-			$info->copyFromPost();
-			$info->id_shop = $this->context->shop->id;
-
-			if ($info->validateFields(false) && $info->validateFieldsLang(false))
+			$shops = Tools::getValue('checkBoxShopAsso_configuration');
+			foreach ($shops as $shop)
 			{
-				$info->save();
-				$this->_clearCache('blockcmsinfo.tpl');
+				if ($id_info = Tools::getValue('id_info'))
+					$info = new infoClass((int)$id_info);
+				else
+					$info = new infoClass();
+				$info->copyFromPost();
+				$info->id_shop = (int)$shop;
+
+				if ($info->validateFields(false) && $info->validateFieldsLang(false))
+				{
+					$info->save();
+					$this->_clearCache('blockcmsinfo.tpl');
+				} else
+					$html .= '<div class="conf error">'.$this->l('An error occurred while attempting to save.').'</div>';
 			}
-			else
-				$html .= '<div class="conf error">'.$this->l('An error occurred while attempting to save.').'</div>';
 		}
 
 		if (Tools::isSubmit('updateblockcmsinfo') || Tools::isSubmit('addblockcmsinfo'))
@@ -167,7 +170,7 @@ class Blockcmsinfo extends Module
 
 			$content = $this->getListContent((int)Configuration::get('PS_LANG_DEFAULT'));
 			foreach ($content as $key => $value)
-				$content[$key]['text'] = substr(strip_tags(Tools::htmlentitiesDecodeUTF8($value['text'])), 0, 200);
+				$content[$key]['text'] = substr(strip_tags($value['text']), 0, 200);
 
 			return $html.$helper->generateList($content, $this->fields_list);
 		}
@@ -207,19 +210,6 @@ class Blockcmsinfo extends Module
 			'legend' => array(
 				'title' => $this->l('New custom CMS block'),
 			),
-			'input' => array(
-				array(
-					'type' => 'textarea',
-					'label' => $this->l('Text'),
-					'lang' => true,
-					'name' => 'text',
-					'cols' => 40,
-					'rows' => 10,
-					'class' => 'rte',
-					'autoload_rte' => true,
-
-				)
-			),
 			'submit' => array(
 				'title' => $this->l('Save'),
 			),
@@ -230,6 +220,26 @@ class Blockcmsinfo extends Module
 					'icon' => 'process-icon-back'
 				)
 			)
+		);
+
+		if ((int)Tools::getValue('id_info') == 0)
+		{
+			$this->fields_form[0]['form']['input'][] = array(
+				'type' => 'shop',
+				'label' => $this->l('Shop association'),
+				'name' => 'checkBoxShopAsso_theme'
+			);
+		}
+		$this->fields_form[0]['form']['input'][] = array(
+			'type' => 'textarea',
+			'label' => $this->l('Text'),
+			'lang' => true,
+			'name' => 'text',
+			'cols' => 40,
+			'rows' => 10,
+			'class' => 'rte',
+			'autoload_rte' => true,
+
 		);
 
 		$helper = new HelperForm();
@@ -287,7 +297,7 @@ class Blockcmsinfo extends Module
 		if (Shop::isFeatureActive())
 		{
 			$this->fields_list['id_shop'] = array(
-				'title' => $this->l('ID Shop'),
+				'title' => $this->l('Shop ID'),
 				'align' => 'center',
 				'width' => 25,
 				'type' => 'int',
