@@ -281,13 +281,13 @@ class Blockcmsinfo extends Module
 	{
 		$this->fields_list = array(
 			'id_info' => array(
-				'title' => $this->l('Custom block number'),
+				'title' => $this->l('Block ID'),
 				'type' => 'text',
 				'search' => false,
 				'orderby' => false,
 			),
 			'text' => array(
-				'title' => $this->l('Custom block text'),
+				'title' => $this->l('Block text'),
 				'type' => 'text',
 				'search' => false,
 				'orderby' => false,
