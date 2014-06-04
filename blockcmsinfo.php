@@ -119,7 +119,11 @@ class Blockcmsinfo extends Module
 
 		if (Tools::isSubmit('saveblockcmsinfo'))
 		{
-			$shops = Tools::getValue('checkBoxShopAsso_configuration');
+			if (Shop::isFeatureActive())
+				$shops = Tools::getValue('checkBoxShopAsso_configuration');
+			else
+				$shops = array($this->context->shop->id);
+
 			foreach ($shops as $shop)
 			{
 				if ($id_info = Tools::getValue('id_info'))
