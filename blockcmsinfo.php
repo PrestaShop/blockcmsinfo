@@ -119,20 +119,28 @@ class Blockcmsinfo extends Module
 
 		if (Tools::isSubmit('saveblockcmsinfo'))
 		{
-			if ($id_info = Tools::getValue('id_info'))
-				$info = new infoClass((int)$id_info);
+			if (Shop::isFeatureActive())
+				$shops = Tools::getValue('checkBoxShopAsso_configuration');
 			else
-				$info = new infoClass();
-			$info->copyFromPost();
-			$info->id_shop = $this->context->shop->id;
+				$shops = array($this->context->shop->id);
 
-			if ($info->validateFields(false) && $info->validateFieldsLang(false))
+			foreach ($shops as $shop)
 			{
-				$info->save();
-				$this->_clearCache('blockcmsinfo.tpl');
+				if ($id_info = Tools::getValue('id_info'))
+					$info = new infoClass((int)$id_info);
+				else
+					$info = new infoClass();
+				$info->copyFromPost();
+				$info->id_shop = (int)$shop;
+
+				if ($info->validateFields(false) && $info->validateFieldsLang(false))
+				{
+					$info->save();
+					$this->_clearCache('blockcmsinfo.tpl');
+				}
+				else
+					$html .= '<div class="conf error">'.$this->l('An error occurred while attempting to save.').'</div>';
 			}
-			else
-				$html .= '<div class="conf error">'.$this->l('An error occurred while attempting to save.').'</div>';
 		}
 
 		if (Tools::isSubmit('updateblockcmsinfo') || Tools::isSubmit('addblockcmsinfo'))
