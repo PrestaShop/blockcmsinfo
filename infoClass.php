@@ -26,13 +26,10 @@
 
 class infoClass extends ObjectModel
 {
-	/** @var integer info id*/
 	public $id;
 	
-	/** @var integer info id shop*/
 	public $id_shop;
 	
-	/** @var string info text*/
 	public $text;
 
 	/**
@@ -43,27 +40,17 @@ class infoClass extends ObjectModel
 		'primary' => 'id_info',
 		'multilang' => true,
 		'fields' => array(
-			'id_shop' =>				array('type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true),
+			'id_shop' =>			array('type' => self::TYPE_NOTHING, 'validate' => 'isUnsignedId'),
 			// Lang fields
-			'text' =>					array('type' => self::TYPE_HTML, 'lang' => true, 'validate' => 'isCleanHtml', 'required' => true),
+			'text' =>				array('type' => self::TYPE_HTML, 'lang' => true, 'validate' => 'isCleanHtml', 'required' => true),
 		)
 	);
 
-	public function copyFromPost()
+	public function save($null_values = false, $autodate = true)
 	{
-		/* Classical fields */
-		foreach ($_POST AS $key => $value)
-			if (array_key_exists($key, $this) AND $key != 'id_'.$this->table)
-				$this->{$key} = $value;
+		$this->id_shop = Shop::getContextShopID();
 
-		/* Multilingual fields */
-		if (sizeof($this->fieldsValidateLang))
-		{
-			$languages = Language::getLanguages(false);
-			foreach ($languages AS $language)
-				foreach ($this->fieldsValidateLang AS $field => $validation)
-					if (isset($_POST[$field.'_'.(int)($language['id_lang'])]))
-						$this->{$field}[(int)($language['id_lang'])] = $_POST[$field.'_'.(int)($language['id_lang'])];
-		}
+		return parent::save($null_values, $autodate);
 	}
+
 }
