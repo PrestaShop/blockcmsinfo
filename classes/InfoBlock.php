@@ -24,7 +24,7 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-class infoClass extends ObjectModel
+class InfoBlock extends ObjectModel
 {
 	public $id;
 	
@@ -45,12 +45,5 @@ class infoClass extends ObjectModel
 			'text' =>				array('type' => self::TYPE_HTML, 'lang' => true, 'validate' => 'isCleanHtml', 'required' => true),
 		)
 	);
-
-	public function save($null_values = false, $autodate = true)
-	{
-		$this->id_shop = Shop::getContextShopID();
-
-		return parent::save($null_values, $autodate);
-	}
 
 }
