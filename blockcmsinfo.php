@@ -102,7 +102,7 @@ class Blockcmsinfo extends Module
 
 		if (Tools::isSubmit('saveblockcmsinfo'))
 		{
-			if ((Tools::getValue('text_'.(int)Configuration::get('PS_LANG_DEFAULT'))) == false)
+			if (!Tools::getValue('text_'.(int)Configuration::get('PS_LANG_DEFAULT'), false))
 				return $this->html . $this->displayError($this->l('You must fill in all fields.')) . $this->renderForm();
 			elseif ($this->processSaveCmsInfo())
 				return $this->html . $this->renderList();
