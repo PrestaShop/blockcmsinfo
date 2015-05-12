@@ -38,7 +38,7 @@ class Blockcmsinfo extends Module
 	{
 		$this->name = 'blockcmsinfo';
 		$this->tab = 'front_office_features';
-		$this->version = '1.5.4';
+		$this->version = '1.5.5';
 		$this->author = 'PrestaShop';
 		$this->bootstrap = true;
 		$this->need_instance = 0;
