@@ -29,9 +29,11 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+use PrestaShop\PrestaShop\Core\Business\Module\WidgetInterface;
+
 require_once _PS_MODULE_DIR_.'blockcmsinfo/classes/InfoBlock.php';
 
-class blockcmsinfo extends Module
+class blockcmsinfo extends Module implements WidgetInterface
 {
     public $html = '';
 
@@ -39,7 +41,7 @@ class blockcmsinfo extends Module
     {
         $this->name = 'blockcmsinfo';
         $this->tab = 'front_office_features';
-        $this->version = '1.6.0';
+        $this->version = '2.0.0';
         $this->author = 'PrestaShop';
         $this->bootstrap = true;
         $this->need_instance = 0;
@@ -47,17 +49,16 @@ class blockcmsinfo extends Module
         parent::__construct();
 
         $this->displayName = $this->l('Custom CMS information block');
-        $this->description = $this->l('Adds custom information blocks in your store.');
-        $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+        $this->description = $this->l('Adds custom information block in your store.');
+        $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
     }
 
     public function install()
     {
-        return    parent::install() &&
+        return  parent::install() &&
                 $this->installDB() &&
-                $this->registerHook('home') &&
-                $this->installFixtures() &&
-                $this->disableDevice(Context::DEVICE_TABLET | Context::DEVICE_MOBILE);
+                $this->registerHook('displayHome') &&
+                $this->installFixtures();
     }
 
     public function installDB()
@@ -100,47 +101,22 @@ class blockcmsinfo extends Module
 
     public function getContent()
     {
-        $id_info = (int)Tools::getValue('id_info');
-
         if (Tools::isSubmit('saveblockcmsinfo')) {
             if (!Tools::getValue('text_'.(int)Configuration::get('PS_LANG_DEFAULT'), false)) {
                 return $this->html . $this->displayError($this->l('You must fill in all fields.')) . $this->renderForm();
-            } elseif ($this->processSaveCmsInfo()) {
-                return $this->html . $this->renderList();
             } else {
+                $this->processSaveCmsInfo();
                 return $this->html . $this->renderForm();
             }
-        } elseif (Tools::isSubmit('updateblockcmsinfo') || Tools::isSubmit('addblockcmsinfo')) {
-            $this->html .= $this->renderForm();
-            return $this->html;
-        } elseif (Tools::isSubmit('deleteblockcmsinfo')) {
-            $info = new InfoBlock((int)$id_info);
-            $info->delete();
-            $this->_clearCache('blockcmsinfo.tpl');
-            Tools::redirectAdmin(AdminController::$currentIndex.'&configure='.$this->name.'&token='.Tools::getAdminTokenLite('AdminModules'));
         } else {
-            $this->html .= $this->renderList();
+            $this->html .= $this->renderForm();
             return $this->html;
         }
     }
 
     public function processSaveCmsInfo()
     {
-        if ($id_info = Tools::getValue('id_info')) {
-            $info = new InfoBlock((int)$id_info);
-        } else {
-            $info = new InfoBlock();
-            if (Shop::isFeatureActive()) {
-                $shop_ids = Tools::getValue('checkBoxShopAsso_configuration');
-                if (!$shop_ids) {
-                    $this->html .= '<div class="alert alert-danger conf error">'.$this->l('You have to select at least one shop.').'</div>';
-                    return false;
-                }
-            } else {
-                $info->id_shop = Shop::getContextShopID();
-            }
-        }
-
+        $info = new InfoBlock(Tools::getValue('id_info', 1));
         $languages = Language::getLanguages(false);
         $text = array();
         foreach ($languages as $lang) {
@@ -167,7 +143,6 @@ class blockcmsinfo extends Module
         return $saved;
     }
 
-
     protected function renderForm()
     {
         $default_lang = (int)Configuration::get('PS_LANG_DEFAULT');
@@ -175,7 +150,7 @@ class blockcmsinfo extends Module
         $fields_form = array(
             'tinymce' => true,
             'legend' => array(
-                'title' => $this->l('New custom CMS block'),
+                'title' => $this->l('CMS block'),
             ),
             'input' => array(
                 'id_info' => array(
@@ -240,95 +215,14 @@ class blockcmsinfo extends Module
         return $helper->generateForm(array(array('form' => $fields_form)));
     }
 
-    protected function renderList()
-    {
-        $this->fields_list = array();
-        $this->fields_list['id_info'] = array(
-                'title' => $this->l('Block ID'),
-                'type' => 'text',
-                'search' => false,
-                'orderby' => false,
-            );
-
-        if (Shop::isFeatureActive() && Shop::getContext() != Shop::CONTEXT_SHOP) {
-            $this->fields_list['shop_name'] = array(
-                    'title' => $this->l('Shop'),
-                    'type' => 'text',
-                    'search' => false,
-                    'orderby' => false,
-                );
-        }
-
-        $this->fields_list['text'] = array(
-                'title' => $this->l('Block text'),
-                'type' => 'text',
-                'search' => false,
-                'orderby' => false,
-            );
-
-        $helper = new HelperList();
-        $helper->shopLinkType = '';
-        $helper->simple_header = false;
-        $helper->identifier = 'id_info';
-        $helper->actions = array('edit', 'delete');
-        $helper->show_toolbar = true;
-        $helper->imageType = 'jpg';
-        $helper->toolbar_btn['new'] = array(
-            'href' => AdminController::$currentIndex.'&configure='.$this->name.'&add'.$this->name.'&token='.Tools::getAdminTokenLite('AdminModules'),
-            'desc' => $this->l('Add new')
-        );
-
-        $helper->title = $this->displayName;
-        $helper->table = $this->name;
-        $helper->token = Tools::getAdminTokenLite('AdminModules');
-        $helper->currentIndex = AdminController::$currentIndex.'&configure='.$this->name;
-
-        $content = $this->getListContent($this->context->language->id);
-
-        return $helper->generateList($content, $this->fields_list);
-    }
-
-    protected function getListContent($id_lang = null)
-    {
-        if (is_null($id_lang)) {
-            $id_lang = (int)Configuration::get('PS_LANG_DEFAULT');
-        }
-
-        $sql = 'SELECT r.`id_info`, rl.`text`, s.`name` as shop_name
-			FROM `'._DB_PREFIX_.'info` r
-			LEFT JOIN `'._DB_PREFIX_.'info_lang` rl ON (r.`id_info` = rl.`id_info`)
-			LEFT JOIN `'._DB_PREFIX_.'shop` s ON (r.`id_shop` = s.`id_shop`)
-			WHERE `id_lang` = '.(int)$id_lang.' AND (';
-
-        if ($shop_ids = Shop::getContextListShopID()) {
-            foreach ($shop_ids as $id_shop) {
-                $sql .= ' r.`id_shop` = '.(int)$id_shop.' OR ';
-            }
-        }
-
-        $sql .= ' r.`id_shop` = 0 )';
-
-        $content = Db::getInstance()->executeS($sql);
-
-        foreach ($content as $key => $value) {
-            $content[$key]['text'] = substr(strip_tags($value['text']), 0, 200);
-        }
-
-        return $content;
-    }
-
     public function getFormValues()
     {
         $fields_value = array();
-        $id_info = (int)Tools::getValue('id_info');
+        $id_info = 1;
 
         foreach (Language::getLanguages(false) as $lang) {
-            if ($id_info) {
-                $info = new InfoBlock((int)$id_info);
-                $fields_value['text'][(int)$lang['id_lang']] = $info->text[(int)$lang['id_lang']];
-            } else {
-                $fields_value['text'][(int)$lang['id_lang']] = Tools::getValue('text_'.(int)$lang['id_lang'], '');
-            }
+            $info = new InfoBlock((int)$id_info);
+            $fields_value['text'][(int)$lang['id_lang']] = $info->text[(int)$lang['id_lang']];
         }
 
         $fields_value['id_info'] = $id_info;
@@ -336,53 +230,30 @@ class blockcmsinfo extends Module
         return $fields_value;
     }
 
-    public function hookHome($params)
+    public function renderWidget($hookName = null, array $configuration = [])
     {
-        $this->context->controller->addCSS($this->_path.'style.css', 'all');
         if (!$this->isCached('blockcmsinfo.tpl', $this->getCacheId())) {
-            $infos = $this->getInfos($this->context->language->id, $this->context->shop->id);
-            $this->context->smarty->assign(array('infos' => $infos, 'nbblocks' => count($infos)));
+            $this->smarty->assign($this->getWidgetVariables($hookName, $configuration));
         }
 
         return $this->display(__FILE__, 'blockcmsinfo.tpl', $this->getCacheId());
     }
-
-    public function getInfos($id_lang, $id_shop)
+    public function getWidgetVariables($hookName = null, array $configuration = [])
     {
         $sql = 'SELECT r.`id_info`, r.`id_shop`, rl.`text`
 			FROM `'._DB_PREFIX_.'info` r
 			LEFT JOIN `'._DB_PREFIX_.'info_lang` rl ON (r.`id_info` = rl.`id_info`)
-			WHERE `id_lang` = '.(int)$id_lang.' AND  `id_shop` = '.(int)$id_shop;
+			WHERE `id_lang` = '.(int)$this->context->language->id.' AND  `id_shop` = '.(int)$this->context->shop->id;
 
-        return Db::getInstance()->executeS($sql);
+        return [
+            'cms_infos' => Db::getInstance()->getRow($sql),
+        ];
     }
 
     public function installFixtures()
     {
         $return = true;
         $tab_texts = array(
-            array(
-                'text' => '<ul>
-<li><em class="icon-truck" id="icon-truck"></em>
-<div class="type-text">
-<h3>Lorem Ipsum</h3>
-<p>Lorem ipsum dolor sit amet conse ctetur voluptate velit esse cillum dolore eu</p>
-</div>
-</li>
-<li><em class="icon-phone" id="icon-phone"></em>
-<div class="type-text">
-<h3>Dolor Sit Amet</h3>
-<p>Lorem ipsum dolor sit amet conse ctetur voluptate velit esse cillum dolore eu</p>
-</div>
-</li>
-<li><em class="icon-credit-card" id="icon-credit-card"></em>
-<div class="type-text">
-<h3>Ctetur Voluptate</h3>
-<p>Lorem ipsum dolor sit amet conse ctetur voluptate velit esse cillum dolore eu</p>
-</div>
-</li>
-</ul>'
-            ),
             array(
                 'text' => '<h3>Custom Block</h3>
 <p><strong class="dark">Lorem ipsum dolor sit amet conse ctetu</strong></p>
@@ -391,7 +262,7 @@ class blockcmsinfo extends Module
         );
 
         $shops_ids = Shop::getShops(true, null, true);
-        $return = true;
+
         foreach ($tab_texts as $tab) {
             $info = new InfoBlock();
             foreach (Language::getLanguages(false) as $lang) {
